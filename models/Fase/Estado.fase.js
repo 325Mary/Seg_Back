@@ -1,0 +1,34 @@
+const  {DataTypes,Model} = require('sequelize')
+const sequelize = require('../../config/connection')
+const moment = require('moment-timezone');
+
+
+ class Fase extends Model{}
+ 
+ Fase.init({
+    id_estado_fase :{
+        type : DataTypes.INTEGER,
+        primaryKey:true,
+        autoIncrement : true,
+    },
+    estado_fase :DataTypes.STRING ,
+    createdAt: {
+        type: DataTypes.NOW,
+        allowNull: false,
+        defaultValue: moment.utc().format('YYYY-MM-DD HH:mm:ss'),
+        field: 'creado'
+    },
+    updatedAt: {
+        type: DataTypes.NOW,
+        allowNull: false,
+        defaultValue: moment.utc().format('YYYY-MM-DD HH:mm:ss'),
+        field: 'actualizado'
+    },
+},{
+    sequelize,
+    sequelize : sequelize,
+    modelName :"estado_faseModel",
+    tableName:"estado_fase",
+})
+
+module.exports = Fase

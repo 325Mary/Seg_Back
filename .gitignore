@@ -1,0 +1,12 @@
+#node_modules
+node_modules
+#docs
+docs
+#env.js
+env.js
+#env
+.env
+#folder.env
+img
+#public
+*public
