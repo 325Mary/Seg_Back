@@ -1,5 +1,5 @@
 const  { Model,DataTypes } = require('sequelize')
-const db = require('../../config/connection')
+const {sequelize} = require('../../config/connection')
 const moment = require('moment-timezone');
 
 
@@ -35,8 +35,8 @@ Notificacion.init({
       },
 },
 {
-    db,
-    sequelize: db,
+    sequelize,
+    sequelize: sequelize,
     modelName: 'Notificacion',
     tableName: 'notificaciones'
 });

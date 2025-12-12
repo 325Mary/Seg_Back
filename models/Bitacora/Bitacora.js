@@ -1,5 +1,5 @@
 const { Model, DataTypes } = require('sequelize')
-const db = require('../../config/connection')
+const {sequelize} = require('../../config/connection')
 const moment = require('moment-timezone');
 
 
@@ -45,8 +45,8 @@ Bitacora.init({
 
 },
     {
-        db,
-        sequelize: db,
+        sequelize,
+        sequelize: sequelize,
         modelName: 'Bitacora',
         tableName: 'bitacoras',
     });

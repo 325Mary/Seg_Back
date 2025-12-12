@@ -28,6 +28,7 @@ exports.LoginUser = async (request, response) => {
             perfil_id: user.perfil_id,
             identificacion: user.identificacion,
             pasword: user.contrasena,
+            id_centro_formacion: user.id_centro_formacion
         }
         let token = jsontoken.sing(userForToken, process.env.PASWORDTOKEN)
         let tokenobject = { token: token }

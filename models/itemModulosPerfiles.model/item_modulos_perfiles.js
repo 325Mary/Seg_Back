@@ -1,5 +1,5 @@
 const { DataTypes, Model } = require("sequelize");
-const db = require("../../config/connection");
+const {sequelize} = require("../../config/connection");
 
 class Seguimiento extends Model { }
 Seguimiento.init({
@@ -29,8 +29,8 @@ Seguimiento.init({
     },
 },
     {
-        db,
-        sequelize: db,
+        sequelize,
+        sequelize: sequelize,
         modelName: 'itemModulePerfilModel',
         tableName: 'item_modulo_perfil'
     })

@@ -1,5 +1,5 @@
 const { Model, DataTypes } = require('sequelize')
-const db = require('../../config/connection')
+const {sequelize} = require('../../config/connection')
 const moment = require('moment-timezone');
 
 class TipoSeguimiento extends Model { }
@@ -25,8 +25,8 @@ TipoSeguimiento.init({
         field: 'actualizado'
     },
 }, {
-    db,
-    sequelize: db,
+    sequelize,
+    sequelize: sequelize,
     modelName: 'TipoSeguimiento',
     tableName: 'tipo_seguimiento',
 })

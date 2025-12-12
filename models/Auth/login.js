@@ -1,5 +1,5 @@
 const  {DataTypes,Model} = require('sequelize')
-const sequelize = require('../../config/connection')
+const {sequelize} = require('../../config/connection')
 const moment = require('moment-timezone');
 
 
@@ -35,6 +35,7 @@ const moment = require('moment-timezone');
         defaultValue: moment.utc().format('YYYY-MM-DD HH:mm:ss'),
         field: 'actualizado'
     },
+    id_centro_formacion :DataTypes.INTEGER ,
 },{
     sequelize,
     sequelize : sequelize,

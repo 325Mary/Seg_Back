@@ -6,24 +6,58 @@ const bcrypt = require('bcrypt')
 const saltRounds = 4
 const controller = require('../Upload/imgController')
 const { Pool } = require("pg");
-const db = require("../../env");
+const {pgConfig} = require("../../config/connection");
 const moment = require('moment-timezone');
-const pool = new Pool(db);
-//search all users
+const CentroFormacion = require('../../models/CentroFormacion/centroFormacion')
+const pool = new Pool(pgConfig);
+
 exports.allUsers = async (request, response) => {
-    let obj1 = new estructuraApi()
-    await modelUser.findAll()
-        .then(succ => {
-            if (succ.length > 0) {
-                obj1.setResultado(succ)
-            } else {
-                obj1.setEstado(404, "not fount", "list users not fount")
-            }
-        }).catch(err => {
-            obj1.setEstado(err.parent.code, "error", err.parent.detail)
-        })
-    response.json(obj1.toResponse())
-}
+  
+  const { id_centro, id_perfil } = request.query;
+
+  let obj1 = new estructuraApi();
+
+  try {
+    
+    if (!id_centro || !id_perfil) {
+      obj1.setEstado(400, "error", "Missing id_centro or id_perfil");
+      return response.json(obj1.toResponse());
+    }
+
+    
+    const queryConditions = {};
+
+    if ( id_perfil !== '4') {
+      
+      queryConditions.where = { id_centro_formacion: id_centro };
+    }
+
+    
+    await modelUser.findAll({
+      ...queryConditions,
+      include: [CentroFormacion],
+    })
+    .then(succ => {
+      if (succ.length > 0) {
+        obj1.setResultado(succ);
+      } else {
+        const message = id_perfil === '3' || id_perfil === '4' ? "No users found" : "No users found in the specified center";
+        obj1.setEstado(404, "not found", message);
+      }
+    })
+    .catch(err => {
+      console.error("Database error:", err); 
+      obj1.setEstado(500, "error", err.message || "An unexpected error occurred");
+    });
+
+    response.json(obj1.toResponse());
+  } catch (err) {
+    console.error("Unexpected error:", err); 
+    obj1.setEstado(500, "error", err.message || "An unexpected error occurred");
+    response.json(obj1.toResponse());
+  }
+};
+
 
 //search user by :id
 exports.viewUser = async (request, response) => {
@@ -31,7 +65,7 @@ exports.viewUser = async (request, response) => {
     const id = request.params.id_usuario
     await modelUser.findOne({
         where: { id_usuario: id },
-        include: [modelPerfiles]
+        include: [modelPerfiles, CentroFormacion]
     })
         .then(succ => {
             if (succ !== null) {

@@ -1,5 +1,5 @@
 const { DataTypes,Model } = require("sequelize");
-const db = require("../../config/connection");
+const {sequelize} = require("../../config/connection");
 
 class Seguimiento extends Model {}
 Seguimiento.init({
@@ -27,8 +27,8 @@ Seguimiento.init({
     asignacion_id: DataTypes.BIGINT
 },
     {
-        db,
-        sequelize: db,
+        sequelize,
+        sequelize: sequelize,
         modelName: 'Seguimiento',
         tableName: 'seguimiento'
     })

@@ -24,6 +24,10 @@ const notificacionController = require('../controller/Notificaciones/notificacio
 const bitacoraController = require('../controller/Bitacoras/bitacorasController')
 const emailCOntroller = require('../controller/Emails/emails.controller')
 const municipiosController = require('../controller/municpios.controller/municipios');
+const centroFormacionController = require('../controller/CentroFormacion/centroFormacionController');
+const ciudadController = require('../controller/Ciudad/ciudadController');
+const departamentoController = require('../controller/Departamento/departamentoController');
+
 const { envioEmail } = require('../controller/Mensaje/mensaje.controller');
 const { check } = require('express-validator');
 const { validateFields } = require('../middleware/validate-fields');
@@ -198,5 +202,25 @@ router.post('/sendEmail/', emailCOntroller.SendEmailNotifications)
 
 /*municipios*/
 router.get('/municipios',municipiosController.GetAllMunicipios)
+
+
+
+router.get('/centroFormacion', centroFormacionController.getCentros);
+router.delete('/centroFormacion/:id', centroFormacionController.deleteCentro)
+router.put('/centroFormacion/:id', centroFormacionController.updateCentro)
+router.get('/centroFormacion/:id', centroFormacionController.getCentroById)
+router.post('/centroFormacion', centroFormacionController.crearCentro)
+
+router.get('/ciudad', ciudadController.getCiudades);
+router.delete('/ciudad/:id', ciudadController.deleteCiudad)
+router.put('/ciudad/:id', ciudadController.updateCiudad)
+router.get('/ciudad/:id', ciudadController.getCiudadById)
+router.post('/ciudad', ciudadController.crearCiudad)
+
+router.get('/departamento', departamentoController.getDepartamentos);
+router.delete('/departamento/:id', departamentoController.deleteDepartamento)
+router.put('/departamento/:id', departamentoController.updateDepartamento)
+router.get('/departamento/:id', departamentoController.getDepartamentoById)
+router.post('/departamento', departamentoController.crearDepartamento)
 
 module.exports = router

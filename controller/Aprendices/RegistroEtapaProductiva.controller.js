@@ -29,6 +29,7 @@ class RegistroEtapaBTO {
     observacion = "";
     representante_legal = "";
     identificacion_representante = "";
+    id_centro_formacion = "";
 
 }
 
@@ -52,7 +53,8 @@ exports.createRegistroEtapa = async (req, res) => {
         observacion: repObj.observacion,
         representante_legal: repObj.representante_legal,
         identificacion_representante: repObj.identificacion_representante,
-        aprendiz_id: id
+        aprendiz_id: id,
+        id_centro_formacion: repObj.id_centro_formacion
     })
 
     estructuraApi.setResultado(newRegistro)
@@ -94,6 +96,7 @@ exports.updateRegistroEtapa = async (req, res) => {
             respuesta.observacion = repObj.observacion,
             respuesta.representante_legal = repObj.representante_legal,
             respuesta.identificacion_representante = repObj.identificacion_representante
+            respuesta.id_centro_formacion = repObj.id_centro_formacion
         await respuesta.save()
         res.json('Register updating succesfully');
         console.log(respuesta);

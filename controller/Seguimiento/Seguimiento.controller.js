@@ -5,8 +5,8 @@ const Documentos = require("../../models/Documento/Documento");
 const Asignacion = require("../../models/Asignacion/Asignacion");
 const Bitacoras = require("../../models/Bitacora/Bitacora");
 const { Pool } = require("pg");
-const db = require("../../env");
-const pool = new Pool(db);
+const {pgConfig} = require("../../config/connection");
+const pool = new Pool(pgConfig);
 exports.getSeguimiento = async (req, res) => {
   let estructuraApi = new EstructuraApi();
 

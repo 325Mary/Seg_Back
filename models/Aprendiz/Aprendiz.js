@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const db = require("../../config/connection");
+const {sequelize} = require("../../config/connection");
 const { Model } = require('sequelize');
 
 class Aprendiz extends Model { }
@@ -44,11 +44,12 @@ Aprendiz.init({
         // defaultValue: moment.utc().format('YYYY-MM-DD HH:mm:ss'),
         field: "actualizado",
     },
-    perfil_id :DataTypes.BIGINT
+    perfil_id :DataTypes.BIGINT,
+    id_centro_formacion :DataTypes.BIGINT
 },
     {
-        db,
-        sequelize: db,
+        sequelize,
+        sequelize: sequelize,
         modelName: "Aprendiz",
         tableName: "aprendices"
     })

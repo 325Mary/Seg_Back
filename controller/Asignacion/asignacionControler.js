@@ -12,46 +12,81 @@ const { Op } = require("sequelize");
 var requestAssignment = require("../../models/DTO/AssignmentRequest");
 var requestNotification = require("../../models/DTO/NotificacionRequest");
 const { Pool } = require("pg");
-const db = require("../../env");
+const {pgConfig} = require("../../config/connection");
 
-const pool = new Pool(db);
+const pool = new Pool(pgConfig);
 
 exports.seeAssignments = async (req, res) => {
   let estructuraapi = new estructuraApi();
-  const asignaciones = await pool.query(`SELECT 
-  asignacion.id_asignacion,
-  asignacion.aprendiz_id,
-  asignacion.estado_fase_id,
-  asignacion.usuario_responsable_id,
-  asignacion.seg_1,
-  asignacion.seg_2,
-  asignacion.seg_3,
-  to_char(asignacion.fecha_seguimiento_inicial,'YYYY/MM/DD') as fecha_seguimiento_inicial,
-  to_char(asignacion.fecha_seguimiento_parcial,'YYYY/MM/DD') as fecha_seguimiento_parcial,
-  to_char(asignacion.fecha_seguimiento_final,'YYYY/MM/DD') as fecha_seguimiento_final,
-  to_char(asignacion.fecha_evaluacion_final,'YYYY/MM/DD') as fecha_evaluacion_final,
-  aprendices.nombres as nombre_aprendiz,
-  aprendices.apellidos as apellido_aprendiz,
-  aprendices.identificacion,  
-  aprendices.contrato_inicio,
-  aprendices.contrato_fin,
-  aprendices.id_aprendiz,
-  usuario.nombres as nombre_usuario,
-  usuario.apellidos as apellido_usuario,
-  estado_fase.estado_fase
-  FROM asignacion
-  JOIN aprendices 
-  ON aprendices.id_aprendiz = asignacion.aprendiz_id
-  JOIN usuario 
-  ON usuario.id_usuario = asignacion.usuario_responsable_id
-  JOIN estado_fase ON estado_fase.id_estado_fase = asignacion.estado_fase_id`);
+  const { id_centro, id_perfil } = req.query;
+  
+  try {
+    if (!id_centro || !id_perfil) {
+      estructuraapi.setEstado(400, "error", "Missing id_centro or id_perfil");
+      return res.json(estructuraapi.toResponse());
+    }
 
-  if (asignaciones.rows.length > 0) {
-    estructuraapi.setResultado(asignaciones.rows);
-  } else {
-    estructuraapi.setEstado(404, "error", "list assignments not found");
+    let whereCondition = '';
+    if (id_perfil !== '4') {
+      whereCondition = 'WHERE aprendices.id_centro_formacion = $1';
+    }
+
+    const query = `
+      SELECT 
+        asignacion.id_asignacion,
+        asignacion.aprendiz_id,
+        asignacion.estado_fase_id,
+        asignacion.usuario_responsable_id,
+        asignacion.seg_1,
+        asignacion.seg_2,
+        asignacion.seg_3,
+        to_char(asignacion.fecha_seguimiento_inicial,'YYYY/MM/DD') as fecha_seguimiento_inicial,
+        to_char(asignacion.fecha_seguimiento_parcial,'YYYY/MM/DD') as fecha_seguimiento_parcial,
+        to_char(asignacion.fecha_seguimiento_final,'YYYY/MM/DD') as fecha_seguimiento_final,
+        to_char(asignacion.fecha_evaluacion_final,'YYYY/MM/DD') as fecha_evaluacion_final,
+        aprendices.nombres as nombre_aprendiz,
+        aprendices.apellidos as apellido_aprendiz,
+        aprendices.identificacion,  
+        aprendices.contrato_inicio,
+        aprendices.contrato_fin,
+        aprendices.id_aprendiz,
+        usuario.nombres as nombre_usuario,
+        usuario.apellidos as apellido_usuario,
+        estado_fase.estado_fase,
+        centro_formacion.id_centro_formacion AS id_centro_formacion,
+        centro_formacion.nombre AS nombre_centro
+      FROM asignacion
+      JOIN aprendices 
+        ON aprendices.id_aprendiz = asignacion.aprendiz_id
+      JOIN usuario 
+        ON usuario.id_usuario = asignacion.usuario_responsable_id
+      JOIN estado_fase 
+        ON estado_fase.id_estado_fase = asignacion.estado_fase_id
+      LEFT JOIN centro_formacion
+        ON centro_formacion.id_centro_formacion = aprendices.id_centro_formacion
+      ${whereCondition}
+    `;
+
+    const asignaciones = id_perfil !== '4' 
+      ? await pool.query(query, [id_centro])
+      : await pool.query(query);
+
+    if (asignaciones.rows.length > 0) {
+      estructuraapi.setResultado(asignaciones.rows);
+    } else {
+      const message = id_perfil === '4' 
+        ? "No assignments found" 
+        : "No assignments found for apprentices in the specified center";
+      estructuraapi.setEstado(404, "not found", message);
+    }
+
+    res.json(estructuraapi.toResponse());
+
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    estructuraapi.setEstado(500, "error", err.message || "An unexpected error occurred");
+    res.json(estructuraapi.toResponse());
   }
-  res.json(estructuraapi.toResponse());
 };
 
 exports.seeAssignment = async (req, res) => {
@@ -109,45 +144,86 @@ exports.seeMyAssignments = async (req, res) => {
   } else {
     estructuraapi.setEstado(404, "info", "No tienes Asignaciones");
   }
+  console.log("asig", asignacion);
+  
   res.json(estructuraapi.toResponse());
 };
 
 exports.dataForform = async (req, res) => {
   let estructuraapi = new estructuraApi();
-  const aprendices = await Aprendiz.findAll();
-  const usuarios = await Usuario.findAll({
-    where: {
-      perfil_id: {[Op.in]:[1,3]}
+  const { id_centro, id_perfil } = req.query; 
+
+  try {
+    
+    if (!id_centro || !id_perfil) {
+      estructuraapi.setEstado(400, "error", "Missing id_centro or id_perfil");
+      return res.json(estructuraapi.toResponse());
     }
-  });
-  const fases = await Fase.findAll();
-  const novedades = await Novedades.findAll();
 
-  if (!aprendices.length > 0) {
-    estructuraapi.setEstado(404, "error", "aprendices not found");
+    
+    let whereCondition = {};
+
+    
+    if (id_perfil !== '4') {
+      whereCondition.id_centro_formacion = id_centro; 
+    }
+
+    
+    const aprendices = await Aprendiz.findAll({
+      where: whereCondition,  
+    });
+
+    
+    let usuarios;
+    if (id_perfil === '4') {
+      
+      usuarios = await Usuario.findAll();
+    } else {
+      
+      usuarios = await Usuario.findAll({
+        where: {
+          perfil_id: { [Op.in]: [1, 3] },  
+          id_centro_formacion: id_centro,   
+        },
+      });
+    }
+
+    
+    const fases = await Fase.findAll();
+    const novedades = await Novedades.findAll();
+
+    
+    if (aprendices.length === 0) {
+      estructuraapi.setEstado(404, "error", "aprendices not found");
+    }
+    if (usuarios.length === 0) {
+      estructuraapi.setEstado(404, "error", "usuarios not found");
+    }
+    if (fases.length === 0) {
+      estructuraapi.setEstado(404, "error", "fases not found");
+    }
+    if (novedades.length === 0) {
+      estructuraapi.setEstado(404, "error", "noveltys not found");
+    }
+
+    
+    const results = {
+      aprendices,
+      usuarios,
+      fases,
+      novedades,
+    };
+    estructuraapi.setResultado(results);
+
+    res.json(estructuraapi.toResponse());
+
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    estructuraapi.setEstado(500, "error", err.message || "An unexpected error occurred");
+    res.json(estructuraapi.toResponse());
   }
-
-  if (!usuarios.length > 0) {
-    estructuraapi.setEstado(404, "error", "usuarios not found");
-  }
-  if (!fases.length > 0) {
-    estructuraapi.setEstado(404, "error", "fases not found");
-  }
-  if (!novedades.length > 0) {
-    estructuraapi.setEstado(404, "error", "noveltys not found");
-  }
-
-  const results = {
-    aprendices,
-    usuarios,
-    fases,
-    novedades,
-  };
-
-  estructuraapi.setResultado(results);
-
-  res.json(estructuraapi.toResponse());
 };
+
 
 exports.createAssignment = async (req, res) => {
   let estructuraapi = new estructuraApi();
@@ -157,7 +233,6 @@ exports.createAssignment = async (req, res) => {
     fecha_seguimiento_final,
   } = req.body;
 
-  // console.log(req.body);
 
   requestAssignment = req.body;
   const { aprendiz_id } = req.body;

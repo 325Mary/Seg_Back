@@ -17,6 +17,9 @@ const Notificacion = require("./Notificacion/Notificacion");
 const ModelItemModulePerfil = require("./itemModulosPerfiles.model/item_modulos_perfiles");
 const ModelPerfiles = require("./perfiles.model/perfilModeel");
 const ModelItemModulos = require("./ItemModulos.model/item_modulos");
+const CentroFormacion = require('./CentroFormacion/centroFormacion')
+const Ciudad = require('./Ciudad/ciudad')
+const Departamento = require('./Departamentos/Departamento')
 
 ProgramaFormacion.belongsTo(Redes, { foreignKey: "red_id" });
 Redes.hasMany(ProgramaFormacion, { foreignKey: "red_id" });
@@ -81,6 +84,16 @@ ModelPerfiles.hasMany(ModelItemModulePerfil, { foreignKey: "perfil_id" });
 ModelItemModulePerfil.belongsTo(ModelItemModulos, { foreignKey: "item_modulo_id" });
 ModelItemModulos.hasMany(ModelItemModulePerfil, { foreignKey: "item_modulo_id" });
 
+User.belongsTo(CentroFormacion, { foreignKey: "id_centro_formacion" });
+CentroFormacion.hasMany(User, { foreignKey: "id_centro_formacion" });
+
+Aprendiz.belongsTo(CentroFormacion, { foreignKey: "id_centro_formacion" });
+CentroFormacion.hasMany(Aprendiz, { foreignKey: "id_centro_formacion" });
+
+Ciudad.belongsTo(Departamento, { foreignKey: "departamento_id" });
+Departamento.hasMany(Ciudad, { foreignKey: "departamento_id" });
+
+
 module.exports = {
   Areas,
   Redes,
@@ -96,5 +109,8 @@ module.exports = {
   TipoSeguimiento,
   ModelItemModulePerfil,
   ModelItemModulos,
-  ModelPerfiles
+  ModelPerfiles,
+  CentroFormacion,
+  Ciudad,
+  Departamento
 };

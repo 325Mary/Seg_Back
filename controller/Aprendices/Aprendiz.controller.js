@@ -5,16 +5,16 @@ const Asignacion = require("../../models/Asignacion/Asignacion");
 const EstructuraApi = require("../../helpers/estructuraApi");
 const RegitroEtapaProductiva = require("../../models/Aprendiz/RegistroEtapaProductiva");
 const { Pool } = require("pg");
-const db = require("../../env");
+const {pgConfig } = require("../../config/connection");
 const saltRounds = 4
 const bcrypt = require('bcrypt')
 const moment = require('moment-timezone');
-const sequelize = require("../../config/connection");
+const CentroFormacion = require('../../models/CentroFormacion/centroFormacion')
 
 
 
 
-const pool = new Pool(db);
+const pool = new Pool(pgConfig );
 
 exports.getAprendices = async (req, res) => {
     let estructuraApi = new EstructuraApi();
@@ -119,7 +119,8 @@ exports.getByIdAprendiz = async (req, res) => {
     try {
         const respuesta = await Aprendiz.findOne({
             where: { id_aprendiz: id },
-            include: [ModelPerfil]
+            include: [ModelPerfil, CentroFormacion],
+            
         })
         if (!respuesta) {
             api.setEstado(404, "empty", 'No existe este registro de aprendiz')
@@ -165,7 +166,7 @@ class AprendizREP {
     nit_arl = "";
     nombre_empresa = "";
     nit_empresa = "";
-    ciudad_id = "";
+    municipio_id = "";
     direccion = "";
     telefono_empresa = "";
     correo = "";
@@ -176,71 +177,95 @@ class AprendizREP {
     arl = "";
     //departamento_empresa = "";
     razon_social = "";
+    id_centro_formacion = "";
 }
 exports.getRegistroCompleto = async (req, res) => {
     let estructuraApi = new EstructuraApi();
-    const registro = await pool.query(`SELECT
-    registro_etapa_productiva.id_empresa,
-    registro_etapa_productiva.nit_eps,
-    registro_etapa_productiva.eps,
-    registro_etapa_productiva.nit_arl,
-    registro_etapa_productiva.nombre_empresa,
-    registro_etapa_productiva.direccion,
-    registro_etapa_productiva.telefono,
-    registro_etapa_productiva.correo,
-    registro_etapa_productiva.modalidad,
-    registro_etapa_productiva.observacion,
-    registro_etapa_productiva.representante_legal,
-    registro_etapa_productiva.razon_social,
-    dpt_emp.departamento AS departamento_empresa,
-    mun_emp.municipio AS ciudad_empresa,
-    registro_etapa_productiva.arl,
-    aprendices.id_aprendiz,
-    aprendices.nombres,
-    aprendices.apellidos,
-    aprendices.genero,
-    aprendices.telefono,
-    aprendices.correo_alternativo,
-    aprendices.centro,
-    aprendices.ficha,
-    aprendices.identificacion,
-    aprendices.tipo_documento,
-    aprendices.fin_lectiva,
-    aprendices.fin_productiva,
-    aprendices.regional,
-    mun_apr.municipio,
-    dpt_apr.departamento,
-    aprendices.fase_aprendiz,
-    aprendices.fecha_nacimiento,
-    programa_formacion.programa_formacion,
-    programa_formacion.red_id,
-    programa_formacion.tipo_programa,
-    programa_formacion.codigo_programa,
-    registro_etapa_productiva.identificacion_representante,
-    asignacion.id_asignacion
-    FROM registro_etapa_productiva
-    JOIN aprendices
-    ON registro_etapa_productiva.aprendiz_id = aprendices.id_aprendiz
-    JOIN programa_formacion
-    ON aprendices.programa_id = programa_formacion.id_programa_formacion
-    LEFT JOIN asignacion
-    ON asignacion.aprendiz_id = aprendices.id_aprendiz
-    LEFT JOIN municipios AS mun_apr
-    ON mun_apr.id_municipio = aprendices.municipio_id
-    LEFT JOIN departamentos AS dpt_apr
-    ON dpt_apr.id_departamento = mun_apr.departamento_id
-    LEFT JOIN municipios AS mun_emp
-    ON mun_emp.id_municipio = registro_etapa_productiva.ciudad_id
-    LEFT JOIN departamentos AS dpt_emp
-    ON dpt_emp.id_departamento = mun_emp.departamento_id;
-    `)
-    if (registro.rows.length > 0) {
-        estructuraApi.setResultado(registro.rows)
-    } else {
-        estructuraApi.setEstado(404, 'error', 'No tienes registros')
+    const { id_centro, id_perfil } = req.query;
+
+    try {
+        if (!id_centro || !id_perfil) {
+            estructuraApi.setEstado(400, "error", "Missing id_centro or id_perfil");
+            return res.json(estructuraApi.toResponse());
+        }
+
+        let whereCondition = '';
+
+        if (id_perfil !== '4') {
+            whereCondition = `WHERE aprendices.id_centro_formacion = $1`;
+        }
+
+        const query = `
+            SELECT
+                registro_etapa_productiva.nit_eps,
+                registro_etapa_productiva.eps,
+                registro_etapa_productiva.nit_arl,
+                registro_etapa_productiva.nombre_empresa,
+                registro_etapa_productiva.direccion,
+                registro_etapa_productiva.telefono,
+                registro_etapa_productiva.correo,
+                registro_etapa_productiva.modalidad,
+                registro_etapa_productiva.observacion,
+                registro_etapa_productiva.representante_legal,
+                registro_etapa_productiva.razon_social,
+                dpt_emp.departamento AS departamento_empresa,
+                mun_emp.municipio AS ciudad_empresa,
+                registro_etapa_productiva.arl,
+                aprendices.id_aprendiz,
+                aprendices.nombres,
+                aprendices.apellidos,
+                aprendices.genero,
+                aprendices.telefono,
+                aprendices.correo_alternativo,
+                aprendices.centro,
+                aprendices.ficha,
+                aprendices.identificacion,
+                aprendices.tipo_documento,
+                aprendices.fin_lectiva,
+                aprendices.fin_productiva,
+                aprendices.regional,
+                mun_apr.municipio,
+                dpt_apr.departamento,
+                aprendices.fase_aprendiz,
+                aprendices.fecha_nacimiento,
+                programa_formacion.programa_formacion,
+                programa_formacion.red_id,
+                programa_formacion.tipo_programa,
+                programa_formacion.codigo_programa,
+                registro_etapa_productiva.identificacion_representante,
+                asignacion.id_asignacion,
+                centro_formacion.id_centro_formacion AS id_centro_formacion,
+                centro_formacion.nombre AS nombre_centro
+            FROM registro_etapa_productiva
+            JOIN aprendices ON registro_etapa_productiva.aprendiz_id = aprendices.id_aprendiz
+            JOIN programa_formacion ON aprendices.programa_id = programa_formacion.id_programa_formacion
+            LEFT JOIN asignacion ON asignacion.aprendiz_id = aprendices.id_aprendiz
+            LEFT JOIN municipios AS mun_apr ON mun_apr.id_municipio = aprendices.municipio_id
+            LEFT JOIN departamentos AS dpt_apr ON dpt_apr.id_departamento = mun_apr.departamento_id
+            LEFT JOIN municipios AS mun_emp ON mun_emp.id_municipio = registro_etapa_productiva.municipio_id
+            LEFT JOIN departamentos AS dpt_emp ON dpt_emp.id_departamento = mun_emp.departamento_id
+            LEFT JOIN centro_formacion ON centro_formacion.id_centro_formacion = aprendices.id_centro_formacion
+            ${whereCondition}
+        `;
+
+        const registro = id_perfil !== '4'
+            ? await pool.query(query, [id_centro])
+            : await pool.query(query);
+
+        if (registro.rows.length > 0) {
+            estructuraApi.setResultado(registro.rows);
+        } else {
+            estructuraApi.setEstado(404, 'error', 'No tienes registros');
+        }
+
+        res.json(estructuraApi.toResponse());
+    } catch (err) {
+        console.error("Unexpected error:", err);
+        estructuraApi.setEstado(500, 'error', err.message || 'An unexpected error occurred');
+        res.json(estructuraApi.toResponse());
     }
-    res.json(estructuraApi.toResponse())
-}
+};
+
 exports.getByIdAprendizWithREP = async (req, res) => {
     let estructuraApi = new EstructuraApi();
     const { id } = req.params
@@ -253,7 +278,6 @@ exports.createAprendizWithREP = async (req, res) => {
     let estructuraApi = new EstructuraApi();
     aprendizREP_Obj = new AprendizREP
     aprendizREP_Obj = req.body;
-    //console.log(req.body);
     let identificacion = aprendizREP_Obj.identificacion + ''
     let aprendiz = await Aprendiz.findAll({ where: { identificacion: identificacion } })
     if (aprendiz.length > 0) {
@@ -271,6 +295,7 @@ exports.createAprendizWithREP = async (req, res) => {
             correo_misena: aprendizREP_Obj.correo_misena,
             correo_alternativo: aprendizREP_Obj.correo_alternativo,
             municipio_id: aprendizREP_Obj.municipio_id,
+            id_centro_formacion: aprendizREP_Obj.id_centro_formacion,
             centro: aprendizREP_Obj.centro,
             programa_id: aprendizREP_Obj.programa_id,
             inicio_lectiva: aprendizREP_Obj.inicio_lectiva,
@@ -288,20 +313,20 @@ exports.createAprendizWithREP = async (req, res) => {
             perfil_id: 2,
             password: await bcrypt.hash(aprendizREP_Obj.identificacion.toString(), saltRounds),
         })
+        
         const newRegistroEtapa = RegitroEtapaProductiva.create({
             nit_eps: aprendizREP_Obj.nit_eps,
             eps: aprendizREP_Obj.eps,
             nit_arl: aprendizREP_Obj.nit_arl,
             nombre_empresa: aprendizREP_Obj.nombre_empresa,
             nit_empresa: aprendizREP_Obj.nit_empresa,
-            ciudad_id: aprendizREP_Obj.ciudad_id,
+            municipio_id: aprendizREP_Obj.municipio_id,
             direccion: aprendizREP_Obj.direccion,
             telefono: aprendizREP_Obj.telefono_empresa,
             correo: aprendizREP_Obj.correo,
             modalidad: aprendizREP_Obj.modalidad,
             observacion: aprendizREP_Obj.observacion,
             representante_legal: aprendizREP_Obj.representante_legal,
-            identificacion_representante: aprendizREP_Obj.identificacion_representante,
             aprendiz_id: newAprendiz.id_aprendiz,
             arl: aprendizREP_Obj.arl,
             razon_social: aprendizREP_Obj.razon_social,
@@ -354,7 +379,7 @@ exports.updateAprendizWithREP = async (req, res) => {
         registroEP.nombre_empresa = aprendizREP_Obj.nombre_empresa,
         registroEP.nit_empresa = aprendizREP_Obj.nit_empresa,
         registroEP.nit_arl = aprendizREP_Obj.nit_arl,
-        registroEP.ciudad_id = aprendizREP_Obj.ciudad_id,
+        registroEP.municipio_id = aprendizREP_Obj.municipio_id,
         registroEP.direccion = aprendizREP_Obj.direccion,
         registroEP.telefono = aprendizREP_Obj.telefono,
         registroEP.correo = aprendizREP_Obj.correo,
@@ -423,7 +448,6 @@ exports.getAprendizByIdNovedad = async (req, res) => {
     programa_formacion.red_id,
     programa_formacion.tipo_programa,
     programa_formacion.codigo_programa,
-    registro_etapa_productiva.id_empresa,
     registro_etapa_productiva.nit_eps,
     registro_etapa_productiva.eps,
     registro_etapa_productiva.nit_arl,
@@ -452,7 +476,7 @@ exports.getAprendizByIdNovedad = async (req, res) => {
     JOIN departamentos
     ON departamentos.id_departamento = municipios.departamento_id
     JOIN municipios mun_emp 
-    ON mun_emp.id_municipio = registro_etapa_productiva.ciudad_id
+    ON mun_emp.id_municipio = registro_etapa_productiva.municipio_id
     JOIN departamentos dep_emp
     ON dep_emp.id_departamento = mun_emp.departamento_id
 

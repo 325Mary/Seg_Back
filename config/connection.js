@@ -1,24 +1,39 @@
-const {Sequelize} = require('sequelize');
-const database = require('../env')
+require('dotenv').config();
+const { Sequelize } = require('sequelize');
+
 
 const sequelize = new Sequelize(
-    database.database,
-    database.user,
-    database.password,
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASSWORD,
     {
-        host:database.host,
-        dialect:"postgres",
-        port:database.port,
-        difine:{
-            timestamps :false
+        host: process.env.DB_HOST,
+        dialect: "postgres",
+        port: process.env.DB_PORT,
+        define: {
+            timestamps: false, 
+            underscored: false 
         },
+        logging: false  
     }
 );
-//conect database
-sequelize.sync(/*{force:false}*/).then(()=>{  //  if force === true ::: == DROP DATABASE
-    console.log(`conect successfully database : ${database.database}`);
-}).catch(err =>{
-    console.log(`conecct failed : [${err}]`);
-})
 
-module.exports = sequelize
+
+sequelize.authenticate()
+    .then(() => {
+        console.log(`Connected successfully to database: ${process.env.DB_NAME}`);
+        // return sequelize.sync({ alter: true }); 
+    })
+    .catch(err => {
+        console.log(`Connection failed:`, err.message);
+    });
+
+    const pgConfig = {
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: Number(process.env.DB_PORT)
+};
+
+module.exports = {sequelize, pgConfig};

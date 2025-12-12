@@ -1,7 +1,7 @@
 const { Model, DataTypes } = require('sequelize')
-const db = require('../../config/connection')
+const {sequelize} = require('../../config/connection')
 const moment = require('moment-timezone');
-const { database } = require('../../env');
+// const { database } = require('../../env');
 
 class Documentos_Certificacion extends Model {}
 
@@ -31,8 +31,8 @@ Documentos_Certificacion.init({
     requisito_id: DataTypes.BIGINT
 },
     {
-        db,
-        sequelize: db,
+        sequelize,
+        sequelize: sequelize,
         modelName: 'Documentos_Certificacion',
         tableName: 'documentos_certificacion'
 })

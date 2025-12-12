@@ -1,5 +1,5 @@
 const  DataTypes = require('sequelize')
-const db = require('../../config/connection')
+const {sequelize} = require('../../config/connection')
 // const moment = require('moment-timezone');
 const { Model } = require('sequelize');
 
@@ -16,7 +16,7 @@ RegistroEtapaProductiva.init({
   nit_arl: DataTypes.STRING,
   nombre_empresa: DataTypes.STRING,
   nit_empresa: DataTypes.STRING,
-  ciudad_id: DataTypes.INTEGER,
+  municipio_id: DataTypes.INTEGER,
   direccion: DataTypes.STRING,
   telefono: DataTypes.STRING,
   correo: DataTypes.STRING,
@@ -28,25 +28,30 @@ RegistroEtapaProductiva.init({
   razon_social: DataTypes.STRING,
   //departamento_empresa: DataTypes.STRING,
   createdAt: {
-    type: DataTypes.NOW,
-    allowNull: false,
-    field: 'creado'
-  },
+  type: DataTypes.DATE,
+  allowNull: false,
+  defaultValue: DataTypes.NOW,
+  field: 'creado'
+},
 
-updatedAt:{
-    type: DataTypes.NOW,
-    allowNull: false,
-    // defaultValue: moment.utc().format('YYYY-MM-DD HH:mm:ss'),
-    field: 'actualizado'
-  },
+updatedAt: {
+  type: DataTypes.DATE,
+  allowNull: false,
+  defaultValue: DataTypes.NOW,
+  field: 'actualizado'
+},
+
   aprendiz_id: DataTypes.BIGINT,
 
 },
   {
-    db,
-    sequelize: db,
+    sequelize,
+    sequelize: sequelize,
     modelName: "RegistroEtapaProductiva",
     tableName: "registro_etapa_productiva",
+    timestamps: true, 
+    createdAt: 'creado',
+  updatedAt: 'actualizado'
   }
 );
 

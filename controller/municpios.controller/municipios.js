@@ -1,7 +1,7 @@
 
 const municipiosModel = require('../../models/municipios/municipios')
 const estructuraApi = require('../../helpers/estructuraApi')
-const sequelize = require('../../config/connection')
+const {sequelize} = require('../../config/connection')
 
 exports.GetAllMunicipios = async(req , res ) => {
     const api = new  estructuraApi()

@@ -5,10 +5,10 @@ const Documentos_Certificacion = require("../../models/Documentos Certificacion/
 const Asignacion = require("../../models/Asignacion/Asignacion")
 const Documentos = require("../../models/Documento/Documento");
 const { Pool } = require("pg");
-const db = require("../../env");
+const {pgConfig} = require("../../config/connection");
 const returnPath = require("../../helpers/returnPath")
 
-const pool = new Pool(db);
+const pool = new Pool(pgConfig);
 
 exports.allDocumentosCertificaciones = async (req, res) => {
     const estructuraApi = new EstructuraApi()
@@ -114,36 +114,67 @@ exports.getDocumentosByRequisito = async (req, res) => {
 }
 exports.getAprendicesPorCertificar = async (req, res) => {
     const estructuraApi = new EstructuraApi()
-    const Lista = await pool.query(`select  asignacion.id_asignacion,
-    asignacion.aprendiz_id,
-    asignacion.usuario_responsable_id,
-    to_char(asignacion.fecha_seguimiento_inicial,'YYYY/MM/DD') as fecha_seguimiento_inicial,
-    to_char(asignacion.fecha_seguimiento_parcial,'YYYY/MM/DD') as fecha_seguimiento_parcial,
-    to_char(asignacion.fecha_seguimiento_final,'YYYY/MM/DD') as fecha_seguimiento_final,
-    novedades.tipo_novedad,
-    aprendices.nombres as nombre_aprendiz,
-    aprendices.apellidos as apellido_aprendiz,
-    aprendices.identificacion,
-    usuario.nombres as nombre_usuario,
-    usuario.apellidos as apellido_usuario,
-    estado_fase.estado_fase
-    FROM asignacion
-     JOIN aprendices 
-    ON aprendices.id_aprendiz = asignacion.aprendiz_id
-     JOIN usuario 
-    ON usuario.id_usuario = asignacion.usuario_responsable_id
-     JOIN estado_fase 
-    ON estado_fase.id_estado_fase = asignacion.estado_fase_id
-    LEFT JOIN novedades
-    ON novedades.id_novedad = asignacion.novedad_id
-    where asignacion.estado_fase_id= 3`)
-    if (Lista.rows.length > 0) {
-        estructuraApi.setResultado(Lista.rows)
-    } else {
-        estructuraApi.setEstado(404, "error", " No existen aprendices en esta fase")
+    const { id_centro, id_perfil } = req.query;  
+
+    try {
+        
+        if (!id_centro || !id_perfil) {
+            estructuraApi.setEstado(400, "error", "Missing id_centro or id_perfil");
+            return res.json(estructuraApi.toResponse());
+        }
+
+        let whereCondition = "WHERE asignacion.estado_fase_id = 3";  
+
+        
+        if (id_perfil !== '4') {
+            whereCondition += ` AND aprendices.id_centro_formacion = $1`;  
+        }
+
+        
+        const query = `
+            SELECT 
+                asignacion.id_asignacion,
+                asignacion.aprendiz_id,
+                asignacion.usuario_responsable_id,
+                TO_CHAR(asignacion.fecha_seguimiento_inicial, 'YYYY/MM/DD') AS fecha_seguimiento_inicial,
+                TO_CHAR(asignacion.fecha_seguimiento_parcial, 'YYYY/MM/DD') AS fecha_seguimiento_parcial,
+                TO_CHAR(asignacion.fecha_seguimiento_final, 'YYYY/MM/DD') AS fecha_seguimiento_final,
+                novedades.tipo_novedad,
+                aprendices.nombres AS nombre_aprendiz,
+                aprendices.apellidos AS apellido_aprendiz,
+                aprendices.identificacion,
+                usuario.nombres AS nombre_usuario,
+                usuario.apellidos AS apellido_usuario,
+                estado_fase.estado_fase
+            FROM asignacion
+            JOIN aprendices ON aprendices.id_aprendiz = asignacion.aprendiz_id
+            JOIN usuario ON usuario.id_usuario = asignacion.usuario_responsable_id
+            JOIN estado_fase ON estado_fase.id_estado_fase = asignacion.estado_fase_id
+            LEFT JOIN novedades ON novedades.id_novedad = asignacion.novedad_id
+            ${whereCondition}
+        `;
+
+        
+        const Lista = id_perfil !== '4' 
+            ? await pool.query(query, [id_centro])  
+            : await pool.query(query);  
+
+        
+        if (Lista.rows.length > 0) {
+            estructuraApi.setResultado(Lista.rows);
+        } else {
+            estructuraApi.setEstado(404, "error", "No existen aprendices en esta fase");
+        }
+
+        res.json(estructuraApi.toResponse());
+    } catch (err) {
+        console.error("Unexpected error:", err);
+        estructuraApi.setEstado(500, "error", err.message || "An unexpected error occurred");
+        res.json(estructuraApi.toResponse());
     }
-    res.json(estructuraApi.toResponse())
-}
+};
+
+
 finalizar = async (req, res) => {
     const estructuraApi = new EstructuraApi()
     const asignacion_id = req

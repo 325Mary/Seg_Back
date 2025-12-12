@@ -3,7 +3,8 @@ const jwt = require('jsonwebtoken');
 
 class Token {
     sing =(object) => {
-        let token =  jwt.sign(object, process.env.PASWORDTOKEN)
+        let token =  jwt.sign(object, process.env.PASWORDTOKEN,
+            { expiresIn: '2' });
         return token
     }
 

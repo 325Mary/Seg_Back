@@ -1,6 +1,6 @@
 const {Sequelize, DataTypes, Model} = require('sequelize');
 const Red  = require ('../models/Redes/Red');
-const db = require('../config/connection');
+const {sequelize} = require('../config/connection');
 
 
 class ProgramaFormacion extends Model{}
@@ -26,8 +26,8 @@ ProgramaFormacion.init({
       },
 },
     {
-        db,
-        sequelize:db,
+        sequelize,
+        sequelize:sequelize,
         modelName:"ProgramaFormacion",
         tableName:"programa_formacion"
     }

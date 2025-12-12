@@ -1,7 +1,7 @@
 const { Pool } = require('pg')
-const database = require('../../env')
+const {pgConfig} = require('../../config/connection')
 
-const pool = new Pool(database)
+const pool = new Pool(pgConfig)
 
 exports.getItemModeules = async() => {
     const itemModules =  await pool.query('select * from item_modulos')

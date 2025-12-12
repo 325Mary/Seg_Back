@@ -6,9 +6,9 @@ const returnPath = require("../../helpers/returnPath")
 const Documentos = require("../../models/Documento/Documento");
 var requestBitacora = require("../../models/DTO/BitacoraDTO");
 const { Pool } = require("pg");
-const db = require("../../env");
+const {pgConfig } = require("../../config/connection");
 
-const pool = new Pool(db);
+const pool = new Pool(pgConfig );
 
 
 
