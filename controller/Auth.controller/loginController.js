@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const modelUser = require('../../models/Auth/login')
-const jwt = require('../../controller/Auth.controller/token');
+const { Token } = require('../../controller/Auth.controller/token'); 
 const estructuraApi = require('../../helpers/estructuraApi');
 const saltRounds = 4
 
@@ -22,7 +22,7 @@ exports.LoginUser = async (request, response) => {
         api.setEstado('401', 'info', 'contraseña o identificación invalida')
         response.json(api.toResponse())
     } else {
-        let jsontoken = new jwt()
+        let jsontoken = new Token();
         let userForToken = {
             id: user.id_usuario,
             perfil_id: user.perfil_id,

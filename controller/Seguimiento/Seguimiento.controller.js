@@ -89,14 +89,20 @@ exports.crearSegumientoBack = async (req, res) => {
   let estructuraApi = new EstructuraApi();
   const docsegui = req.body.documento;
   let file_path = req.file.path;
-  // WIN
-    // let file_split = file_path.split("\\")
-    // let final_path = file_split[1] + "/" + file_split[2];
+let file_split = file_path.split("/");
 
-    // Linux
-    let file_split = file_path.split("/")
-    let final_path = file_split[1] + "/" + file_split[2];
+if (file_split.length === 1) {
+    file_split = file_path.split("\\");
+}
 
+let final_path;
+if (file_split.length >= 3) {
+    final_path = file_split[1] + "/" + file_split[2];
+} else if (file_split.length === 2) {
+    final_path = file_split[0] + "/" + file_split[1];
+} else {
+    final_path = file_path;
+}
   const id_asignacion = req.body.asignacion_id;
   const tipo = req.body.tipo_seguimiento_id;
 

@@ -1,28 +1,21 @@
 const nodemailer = require('nodemailer')
-require('dotenv').config();//import listen .env variables globlas
-
+require('dotenv').config()
 
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // true for 465, false for other ports
-    auth: {
-        user: process.env.USEREMAIL, // generated ethereal user
-        pass: process.env.PASSWORDEMAIL, // generated ethereal password
-    },
-});
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.USEREMAIL,
+    pass: process.env.PASSWORDEMAIL,
+  },
+})
 
-transporter.verify().then(data  =>{ 
-
-    if (data) {
-        console.log("Nos Conectamos Satisfactoria mente (!Ya puedes enviar emails !)");
-    }else{
-        console.log("Tenemos un error de Auntenticacion ");
-    }
+transporter.verify().then(() => { 
+  console.log("✅ Conexión SMTP exitosa - Listo para enviar emails")
 }).catch(err => {
-    console.log(`ERROR => ${err}`);
-    
+  console.error("❌ Error de autenticación SMTP:", err.message)
+  console.error("Verifica tus credenciales en el archivo .env")
 })
 
 module.exports = transporter
-

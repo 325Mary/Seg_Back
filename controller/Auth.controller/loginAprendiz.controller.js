@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const modelAprendiz = require('../../models/Aprendiz/Aprendiz')
-const jwt = require('./token');
+const { Token } = require('../../controller/Auth.controller/token'); 
 const estructuraApi = require('../../helpers/estructuraApi');
 const modelAsignacion = require('../../models/Asignacion/Asignacion');
 const saltRounds = 4 
@@ -29,7 +29,7 @@ exports.LoginAprendiz = async (req, res) => {
         api.setEstado('401', 'info', 'contraseña o identificación incorrectos')
         return res.json(api.toResponse())
     } else {
-        let jsontoken = new jwt()
+        let jsontoken = new Token()
         const id_asignacion = aprendiz.Asignacions < 1 ? null : aprendiz.Asignacions[0].id_asignacion
         let userForToken = {
             id: aprendiz.id_aprendiz,

@@ -442,6 +442,7 @@ exports.getAprendizByIdNovedad = async (req, res) => {
     aprendices.correo_alternativo,
     aprendices.inicio_lectiva,
     aprendices.incio_productiva,
+    aprendices.fin_productiva,
     aprendices.contrato_inicio,
     aprendices.contrato_fin,
     programa_formacion.programa_formacion,

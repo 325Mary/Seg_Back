@@ -27,12 +27,20 @@ const municipiosController = require('../controller/municpios.controller/municip
 const centroFormacionController = require('../controller/CentroFormacion/centroFormacionController');
 const ciudadController = require('../controller/Ciudad/ciudadController');
 const departamentoController = require('../controller/Departamento/departamentoController');
+const plantillaAprendizController = require('../controller/Excels/Plantilla_Aprendiz_controller');
+const authController = require('../controller/Auth.controller/token');
 
 const { envioEmail } = require('../controller/Mensaje/mensaje.controller');
 const { check } = require('express-validator');
 const { validateFields } = require('../middleware/validate-fields');
 
-
+//route to validate token
+router.get('/validateToken', authController.verifyToken, (req, res) => {  
+    res.status(200).json({ 
+        valid: true,
+        user: req.userData 
+    });
+});
 // //mensaje
 router.post('/mensaje',[
     check('asunto','El asunto es requerido').not().isEmpty(),
@@ -111,6 +119,7 @@ router.post('/login', loginController.LoginUser)
 router.post('/loginAprendiz', loginControllerAprendiz.LoginAprendiz)
 router.post('/updatedPasswordUser/:id_usuario', loginController.updatePasswordUser)
 router.post('/updatedPasswordAprendiz/:id_aprendiz', loginControllerAprendiz.updatePasswordAprendiz)
+
 /*end login */
 
 
@@ -222,5 +231,8 @@ router.delete('/departamento/:id', departamentoController.deleteDepartamento)
 router.put('/departamento/:id', departamentoController.updateDepartamento)
 router.get('/departamento/:id', departamentoController.getDepartamentoById)
 router.post('/departamento', departamentoController.crearDepartamento)
+
+
+router.get('/plantillaAprendiz', plantillaAprendizController.generarPlantillaExcel);
 
 module.exports = router

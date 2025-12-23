@@ -15,15 +15,18 @@ ProgramaFormacion.init({
     programa_formacion:DataTypes.STRING,
     red_id:DataTypes.BIGINT,
     createdAt: {
-        type: DataTypes.NOW,
+        type: DataTypes.DATE,
         allowNull: false,
+        defaultValue: DataTypes.NOW,
         field: "creado",
-      },
-      updatedAt: {
-        type: DataTypes.NOW,
+        },
+        updatedAt: {
+        type: DataTypes.DATE,
         allowNull: false,
+        defaultValue: DataTypes.NOW,
         field: "actualizado",
-      },
+        },
+
 },
     {
         sequelize,
